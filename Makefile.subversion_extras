@@ -1,5 +1,5 @@
 ifndef SVN_INSTALL_DIR
-export SVN_INSTALL_DIR = $(DEVELOPER_INSTALL_DIR)/usr
+export SVN_INSTALL_DIR = /usr/local
 endif
 
 Install_Prefix = $(SVN_INSTALL_DIR)
@@ -87,16 +87,15 @@ perl-bindings:
 	cd $(BuildDirectory) && \
 	for vers in $(PERLORDEREDVERS); do \
 	    export VERSIONER_PERL_VERSION=$${vers} && \
-	    installarchlib=`perl -MConfig -e 'print $$Config::Config{installarchlib}' | sed "s,^/System,$(DEVELOPER_INSTALL_DIR),"` && \
-	    installprivlib=`perl -MConfig -e 'print $$Config::Config{installprivlib}' | sed "s,^/System,$(DEVELOPER_INSTALL_DIR),"` && \
+	    installarchlib=`perl -MConfig -e 'print $$Config::Config{installarchlib}' | sed "s,^/System,," | sed "s,^/Library,/AppleInternal/Library,"` && \
+	    installprivlib=`perl -MConfig -e 'print $$Config::Config{installprivlib}' | sed "s,^/System,," | sed "s,^/Library,/AppleInternal/Library,"` && \
 	    installbin=$${installprivlib}/bin && \
-	    PLARGS="INSTALLDIRS=perl INSTALLARCHLIB='$${installarchlib}' INSTALLPRIVLIB='$${installprivlib}' INSTALLBIN='$${installbin}' INSTALLSCRIPT='$${installbin}' INSTALLMAN3DIR='$(DEVELOPER_INSTALL_DIR)/usr/share/man/man3'" && \
+	    PLARGS="INSTALLDIRS=perl INSTALLARCHLIB='$${installarchlib}' INSTALLPRIVLIB='$${installprivlib}' INSTALLBIN='$${installbin}' INSTALLSCRIPT='$${installbin}' INSTALLMAN3DIR='/usr/local/share/man/man3'" && \
 	    MAKEARGS="$(Extra_Make_Flags) DESTDIR='$(DSTROOT)'" && \
 	    export RPATHVERS="$${installarchlib}/lib" && \
 	    ditto $(PERLTOPDIRORIG) $(PERLTOPDIR) && \
 	    make -j1 swig-pl PLARGS="$${PLARGS}" MAKEARGS="$${MAKEARGS}" ARCHFLAGS="$(RC_CFLAGS)" && \
 	    make -j1 install-swig-pl PLARGS="$${PLARGS}" MAKEARGS="$${MAKEARGS}" DESTDIR="$(DSTROOT)" && \
-	    sh $(SRCROOT)/rpath_extras.sh && \
 	    for module in Client Core Delta Fs Ra Repos Wc; do\
 		    $(CP) $(DSTROOT)$${installarchlib}/auto/SVN/_$${module}/_$${module}.bundle $(SYMROOT) && \
 		    $(STRIP) -x $(DSTROOT)$${installarchlib}/auto/SVN/_$${module}/_$${module}.bundle && \
@@ -117,6 +116,8 @@ post-install:
 		$(CODESIGN) $${library} || exit 1; \
 	done
 	find $(DSTROOT) -name \*.la -delete
-	find $(DSTROOT)$(DEVELOPER_INSTALL_DIR)/Library/Perl -name .packlist -delete
-	install -m 0755 -d $(DSTROOT)$(CLTOOLS_INSTALL_DIR)
-	ditto $(DSTROOT)$(DEVELOPER_INSTALL_DIR) $(DSTROOT)$(CLTOOLS_INSTALL_DIR)
+	find $(DSTROOT) -name .packlist -delete
+	install -d -o root -g wheel -m 0755 $(DSTROOT)/usr/local/bin
+	install -o root -g wheel -m 0755 $(SRCROOT)/git-svn/git-svn $(DSTROOT)/usr/local/bin
+	install -d -o root -g wheel -m 0755 $(DSTROOT)/usr/local/share/git-core/perl
+	ditto $(SRCROOT)/git-svn/perl $(DSTROOT)/usr/local/share/git-core/perl
