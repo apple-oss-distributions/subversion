@@ -86,7 +86,7 @@ AC_DEFUN(SVN_FIND_JDK,
   dnl See http://developer.apple.com/qa/qa2001/qa1170.html
   os_arch="`uname`"
   if test "$os_arch" = "Darwin"; then
-    OSX_VER=`/usr/bin/sw_vers | grep ProductVersion | cut -f2 | cut -d"." -f1,2`
+    OSX_VER=`/usr/bin/sw_vers -productVersion`
 
     if test "$OSX_VER" = "10.4"; then
       dnl For OS X 10.4, the SDK version is 10.4u instead of 10.4.
